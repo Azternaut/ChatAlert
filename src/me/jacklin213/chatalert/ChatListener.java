@@ -43,8 +43,12 @@ public class ChatListener implements Listener{
 										player.getWorld().playSound(location, Sound.NOTE_PIANO, 1.0F, pitch(18));
 									}
 								}, (long) 4);
-								String cusMessage = rawMessage.replace(txt, ChatColor.GOLD + txt + ChatColor.RESET);
+								String formatMessage = ChatColor.WHITE + rawMessage;
+								String cusMessage = formatMessage.replace(txt, ChatColor.GOLD + "" + ChatColor.UNDERLINE + txt + ChatColor.WHITE);
 								event.setMessage(cusMessage);
+								if (p.hasPermission("chatalert.nocooldown")){
+									return;
+								}
 								plugin.onCooldown.add(playerName);
 								Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, new Runnable(){
 									public void run(){

@@ -1,6 +1,6 @@
 name: ChatAlert
 version: 1.0
-description: Disables hoe breaking lilly pads
+description: Plugin which enhances the chat with tagging system.
 author: jacklin213
 
 main: me.jacklin213.chatalert.ChatAlert
@@ -9,5 +9,6 @@ permissions:
   chatalert.alert:
     default: op
     description: Allows player to use the Alerting system
-
-
+  chatalert.nocooldown:
+    default: op
+    description: Ignores cooldown
