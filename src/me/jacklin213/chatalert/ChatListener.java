@@ -1,5 +1,7 @@
 package me.jacklin213.chatalert;
 
+import java.util.Arrays;
+
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -18,6 +20,61 @@ public class ChatListener implements Listener{
 	}
 	
 	@EventHandler
+	public void onChat(AsyncPlayerChatEvent event){
+		Player player = event.getPlayer();
+		final String playerName = player.getName();
+		String pMsg = event.getMessage();
+		String msg = plugin.getMsgColor() + "~ " + pMsg;
+		if (player.hasPermission("chatalert.alert")){
+			if (plugin.onCooldown.contains(playerName)){
+				player.sendMessage(plugin.chatPluginPrefix + "Tagging is on cooldown");
+				event.setCancelled(true);
+			} else {
+				Boolean tagged = Boolean.valueOf(false);
+				Boolean invalid = Boolean.valueOf(false);
+				String[] sentence = msg.split(" ");
+				
+				for (String word : sentence){
+					if (word.startsWith("@")){
+						String result = word.replaceAll("[-+.^:,!*%$£|/@]", "");
+						Player p = Bukkit.getPlayerExact(result);
+						if (p !=null){
+							int index = Arrays.asList(sentence).indexOf(word);
+							sentence[index] = plugin.getTagColor() + "" +  ChatColor.UNDERLINE + "@" + p.getName() + plugin.getMsgColor();
+							Player pinged = Bukkit.getPlayer(p.getName());
+							this.ping(pinged);
+							tagged = Boolean.valueOf(true);
+						} else {
+							invalid = Boolean.valueOf(true);
+						}
+						StringBuilder builder = new StringBuilder();
+						for (String s : sentence){
+							builder.append(new StringBuilder().append(s).append(" ").toString());
+						}
+						event.setMessage(builder.toString());
+					}
+				}
+				if (tagged.booleanValue() == true){
+					if (player.hasPermission("chatalert.nocooldown")){
+						return;
+					} else {
+						plugin.onCooldown.add(playerName);
+						Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, new Runnable(){
+							public void run(){
+								plugin.onCooldown.remove(playerName);
+							}
+						}, plugin.getCooldownTime());
+					}
+				}
+				if (invalid.booleanValue() == true){
+					event.setCancelled(true);
+					player.sendMessage(plugin.chatPluginPrefix + ChatColor.RED + "Invalid username");
+				}
+			}
+		}
+	}
+	
+	/*@EventHandler
 	public void onChat(AsyncPlayerChatEvent event){
 		Player p = event.getPlayer();
 		final String playerName = p.getName();
@@ -64,6 +121,17 @@ public class ChatListener implements Listener{
 				}
 			}
 		} 
+	}*/
+	
+	private void ping(final Player player){
+		final Location location = player.getLocation();
+		player.getWorld().playSound(location, Sound.NOTE_PIANO, 1.0F, pitch(13));
+		// Note played after one sec
+		Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, new Runnable(){
+			public void run(){
+				player.getWorld().playSound(location, Sound.NOTE_PIANO, 1.0F, pitch(18));
+			}
+		}, (long) 4);
 	}
 	
 	private Float pitch(int numberOfClicks){

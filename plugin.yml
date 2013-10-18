@@ -1,11 +1,17 @@
 name: ChatAlert
-version: 1.0
+version: 1.2
 description: Plugin which enhances the chat with tagging system.
 author: jacklin213
 
 main: me.jacklin213.chatalert.ChatAlert
 
+commands:
+  chatalert:
+    description: Reloads config
+
 permissions:
+  chatalert.reload:
+    default: op
   chatalert.alert:
     default: op
     description: Allows player to use the Alerting system

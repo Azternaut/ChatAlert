@@ -3,5 +3,15 @@
 # Copyright 2013 Licence LinCraft(?)
 # http://dev.bukkit.org/licenses/2049-lin-craft-license/ 
 
+# What color the tagged name will show up in chat as
+Color: '&6'
+# Message color when a player is tagged
+MsgColor: '&f'
+
+# Cooldown time for tagging(Seconds)
+CooldownTime: 10
+
 # Check for updates?
 UpdateCheck: true
+# AutoUpdate? If update is avaliable download it ready for the next startup
+AutoUpdate: true
