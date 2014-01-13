@@ -1,11 +1,13 @@
-#============ ChatAlert ============#
+#============ [ChatAlert] ============#
 
 # Copyright 2013 Licence LinCraft(?)
 # http://dev.bukkit.org/licenses/2049-lin-craft-license/ 
 
 # What color the tagged name will show up in chat as
 Color: '&6'
-# Message color when a player is tagged
+
+# Message color when a player is tagged.
+# Note: If UseSuffix is true, it will ignore this
 MsgColor: '&f'
 
 # Cooldown time for tagging(Seconds)
@@ -15,3 +17,11 @@ CooldownTime: 10
 UpdateCheck: true
 # AutoUpdate? If update is avaliable download it ready for the next startup
 AutoUpdate: true
+
+#==== Advanced ====#
+# Everything stated bellow will require vault
+Advanced:
+  # Vault intergration
+  UseVault: false
+  # Uses Player suffix as message color when being tagged. Will ignore MsgColor
+  UseSuffix: false

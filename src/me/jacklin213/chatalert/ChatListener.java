@@ -1,6 +1,6 @@
 package me.jacklin213.chatalert;
 
-import java.util.Arrays;
+import java.util.Collection;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -10,16 +10,89 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
+import org.bukkit.event.player.PlayerChatTabCompleteEvent;
 
 public class ChatListener implements Listener{
 	
-	public static ChatAlert plugin;
+	private ChatAlert plugin;
 	
 	public ChatListener(ChatAlert instance) {
 		plugin = instance;
 	}
 	
 	@EventHandler
+	public void onChatTab(PlayerChatTabCompleteEvent event){
+		final Collection<String> names = event.getTabCompletions();
+		
+		if (event.getLastToken().equals("@")){
+			return;
+		}
+		
+		if (event.getLastToken().startsWith("@")){
+			String prefix = event.getLastToken().substring(1).toLowerCase();
+			
+			for(Player player : Bukkit.getOnlinePlayers()){
+				if (player.getName().toLowerCase().startsWith(prefix)){
+					names.add("@" + player.getName());
+				} 
+			}
+			Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, new Runnable(){
+				public void run(){
+					names.clear();
+				}
+			}, 40);
+		} else {
+			return;
+		}
+	}
+	
+	@EventHandler
+	public void onTag(AsyncPlayerChatEvent event){
+		final Player player = event.getPlayer();
+		String msg = event.getMessage();
+		String suffix = plugin.getMsgColor();
+		if (plugin.getConfig().getBoolean("Advanced.UseVault") && plugin.getConfig().getBoolean("Advanced.UseSuffix")){
+			suffix = ChatAlert.chat.getPlayerSuffix(player);
+		}
+		if(player.hasPermission("chatalert.alert")){
+			if (plugin.onCooldown.contains(player.getName())){
+				player.sendMessage(plugin.chatPluginPrefix + "Tagging is on cooldown");
+				event.setCancelled(true);
+			} else {
+				for (Player p : Bukkit.getOnlinePlayers()){
+					if (msg.contains("@" + p.getName()) || msg.contains("@" + p.getName().toLowerCase()) || msg.contains("@" + p.getName().toUpperCase())){
+						this.ping(p);
+						msg = ChatColor.translateAlternateColorCodes('&', msg.replace("@" + p.getName(), plugin.getTagColor() + "@" + p.getName() + suffix));
+					}/* else {
+						event.setCancelled(true);
+						player.sendMessage(plugin.chatPluginPrefix + ChatColor.RED + "Player not online or does not exist.");
+					}*/
+				}
+				Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, new Runnable(){
+					public void run(){
+						plugin.onCooldown.remove(player.getName());
+					}
+				}, plugin.getCooldownTime());
+				event.setMessage(msg);
+			}
+			
+			/*for (String phrase : args){
+				if (phrase.startsWith("@")){
+					String name = phrase.substring(1);
+					Player targetPlayer = Bukkit.getPlayer(name);
+					if(targetPlayer != null){
+						plugin.log.info("So far so good");
+					} else {
+						event.setCancelled(true);
+						player.sendMessage(plugin.chatPluginPrefix + ChatColor.RED + "Player not online or does not exist.");
+					}
+				}
+			}*/
+		}
+		
+	}
+	
+	/*@EventHandler
 	public void onChat(AsyncPlayerChatEvent event){
 		Player player = event.getPlayer();
 		final String playerName = player.getName();
@@ -72,7 +145,7 @@ public class ChatListener implements Listener{
 				}
 			}
 		}
-	}
+	}*/
 	
 	/*@EventHandler
 	public void onChat(AsyncPlayerChatEvent event){
@@ -122,6 +195,7 @@ public class ChatListener implements Listener{
 			}
 		} 
 	}*/
+	
 	
 	private void ping(final Player player){
 		final Location location = player.getLocation();

@@ -1,22 +1,26 @@
 package me.jacklin213.chatalert;
 
 import java.io.File;
+import java.security.acl.Permission;
 import java.util.ArrayList;
 import java.util.logging.Logger;
 
 import me.jacklin213.chatalert.Updater.UpdateResult;
 import me.jacklin213.chatalert.Updater.UpdateType;
+import net.milkbowl.vault.chat.Chat;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.plugin.PluginManager;
+import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class ChatAlert extends JavaPlugin{
 	
-	public static ChatAlert plugin;
+	public static Chat chat = null;
+	public static Permission perms = null;
 	
 	public Logger log;
 	public ChatListener chatListener = new ChatListener(this);
@@ -37,6 +41,15 @@ public class ChatAlert extends JavaPlugin{
 		
 		this.updateCheck(updateCheck, autoUpdate, 61677);
 		
+		//Vault setup
+		if (getConfig().getBoolean("Advanced.UseVault")){
+			if (!setupChat()) {
+				log.severe("Disabled due to no Vault dependency found!");
+				getServer().getPluginManager().disablePlugin(this);
+				return;
+			}
+		}
+		
 		//Register Events
 		PluginManager pm = Bukkit.getServer().getPluginManager();
 		pm.registerEvents(chatListener, this);
@@ -52,9 +65,51 @@ public class ChatAlert extends JavaPlugin{
 	@Override
 	public boolean onCommand(CommandSender sender, Command cmd,	String commandLabel, String[] args) {
 		if (commandLabel.equalsIgnoreCase("chatalert") && sender.hasPermission("chatalert.reload")){
-			reloadConfig();
-			sender.sendMessage(chatPluginPrefix + ChatColor.GREEN + "All in check, Files reloaded, ChatColor:" + 
-					getConfig().getString("MsgColor") + " Tagging color: " + getConfig().getString("Color"));
+			/*if (args.length == 2){
+				if (args[0].equalsIgnoreCase("check")){
+					String targetName = args[1];
+					Player targetPlayer = Bukkit.getPlayer(targetName);
+					if (targetPlayer != null ){
+						String displayName = targetPlayer.getDisplayName();
+						sender.sendMessage(displayName);
+						return true;
+					} else {
+						sender.sendMessage("Player is not online");
+						return true;
+					}
+				}
+				if (args[0].equalsIgnoreCase("match")){
+					String phrase = args[1];
+					if (phrase.length() >= 3){
+						for (Player player : Bukkit.getOnlinePlayers()){
+							String nick = player.getDisplayName();
+							String nickName = nick.replaceAll("[]", " "); // this lines needs revising
+							String playerName = player.getName();
+							if (nickName.startsWith(phrase)){
+								Bukkit.broadcastMessage(nickName + " Match found.");
+								log.info(nickName + " Match found.");
+								return true;
+							} else if (playerName.startsWith(phrase)){
+								Bukkit.broadcastMessage(playerName + "Match found.");
+								log.info(playerName + " Match found.");
+								return true;
+							} else {
+								Bukkit.broadcastMessage("No match found.");
+								log.info("No match found.");
+								return true;
+							}
+						}
+					}
+					sender.sendMessage("Too short");
+					return true;
+				}
+			}*/
+			if (args.length == 0){
+				reloadConfig();
+				sender.sendMessage(chatPluginPrefix + ChatColor.GREEN + "All in check, Files reloaded, ChatColor:" + 
+						getConfig().getString("MsgColor") + " Tagging color: " + getConfig().getString("Color"));
+			}
+			return true;
 		}
 		return false;
 	}
@@ -64,7 +119,6 @@ public class ChatAlert extends JavaPlugin{
 		if (!configFile.exists()) {
 			// Tells console its creating a config.yml
 			log.info("Cannot find config.yml, Generating now....");
-			this.getConfig().options().copyDefaults(true);
 			this.saveDefaultConfig();
 			log.info("Config generated !");
 		}
@@ -86,12 +140,24 @@ public class ChatAlert extends JavaPlugin{
 		return cooldownTime;
 	}
 	
+	 private boolean setupChat() {
+		 if (getServer().getPluginManager().getPlugin("Vault") == null) {
+			 return false;
+		 }
+		 RegisteredServiceProvider<Chat> rsp = getServer().getServicesManager().getRegistration(Chat.class);
+		 if (rsp == null) {
+			 return false;
+		 }
+		 chat = rsp.getProvider();
+		 return chat != null;
+	 }
+
 	// Every Plugin must have
-	public void setLogger(){
+	private void setLogger(){
 		log = getLogger();
 	}
 	
-	public void updateCheck(boolean updateCheck, boolean autoUpdate, int ID){
+	private void updateCheck(boolean updateCheck, boolean autoUpdate, int ID){
 		if(updateCheck && (autoUpdate == false)){
 			updater = new Updater(this, ID, this.getFile(), UpdateType.NO_DOWNLOAD, true);
 			if (updater.getResult() == UpdateResult.UPDATE_AVAILABLE) {
