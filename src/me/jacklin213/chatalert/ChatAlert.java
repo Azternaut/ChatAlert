@@ -164,7 +164,7 @@ public class ChatAlert extends JavaPlugin{
 			    log.info("New version available! " + updater.getLatestName());
 			}
 			if (updater.getResult() == UpdateResult.NO_UPDATE){
-				log.info("You are running the latest version of QuickBar+");
+				log.info(String.format("You are running the latest version of %s", getDescription().getName()));
 			}
 		}
 		if(autoUpdate && (updateCheck == false)){
@@ -176,7 +176,7 @@ public class ChatAlert extends JavaPlugin{
 			    log.info("New version available! " + updater.getLatestName());
 			}
 			if (updater.getResult() == UpdateResult.NO_UPDATE){
-				log.info("You are running the latest version of QuickBar+");
+				log.info(String.format("You are running the latest version of %s", getDescription().getName()));
 			}
 		}
 	}

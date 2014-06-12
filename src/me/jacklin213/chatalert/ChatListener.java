@@ -49,20 +49,29 @@ public class ChatListener implements Listener{
 	@EventHandler
 	public void onTag(AsyncPlayerChatEvent event){
 		final Player player = event.getPlayer();
+		final String pID = player.getUniqueId().toString();
 		String msg = event.getMessage();
 		String suffix = plugin.getMsgColor();
 		if (plugin.getConfig().getBoolean("Advanced.UseVault") && plugin.getConfig().getBoolean("Advanced.UseSuffix")){
 			suffix = ChatAlert.chat.getPlayerSuffix(player);
 		}
 		if(player.hasPermission("chatalert.alert")){
-			if (plugin.onCooldown.contains(player.getName())){
+			if (plugin.onCooldown.contains(pID)){
 				player.sendMessage(plugin.chatPluginPrefix + "Tagging is on cooldown");
 				event.setCancelled(true);
 			} else {
 				for (Player p : Bukkit.getOnlinePlayers()){
-					if (msg.contains("@" + p.getName()) || msg.contains("@" + p.getName().toLowerCase()) || msg.contains("@" + p.getName().toUpperCase())){
+					if (msg.contains("@" + p.getName()) || msg.contains("@" + p.getName().toLowerCase()) || msg.contains("@" + p.getName().toUpperCase()) /*|| msg.toLowerCase().contains("@" + p.getName())*/){
+						//ChatAlert v1.4.1
 						this.ping(p);
 						msg = ChatColor.translateAlternateColorCodes('&', msg.replace("@" + p.getName(), plugin.getTagColor() + "@" + p.getName() + suffix));
+						cooldownCheck(player);
+						
+						/* Experiment
+						String replacement = msg.substring(msg.indexOf("@"), (msg.indexOf("@") + 1) + p.getName().length());
+						plugin.log.info(msg.substring(msg.indexOf("@"), (msg.indexOf("@") + 1) + p.getName().length()));
+						this.ping(p);
+						msg = ChatColor.translateAlternateColorCodes('&', msg.replaceAll(replacement, plugin.getTagColor() + "@" + p.getName() + suffix));*/
 					}/* else {
 						event.setCancelled(true);
 						player.sendMessage(plugin.chatPluginPrefix + ChatColor.RED + "Player not online or does not exist.");
@@ -70,7 +79,7 @@ public class ChatListener implements Listener{
 				}
 				Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, new Runnable(){
 					public void run(){
-						plugin.onCooldown.remove(player.getName());
+						plugin.onCooldown.remove(pID);
 					}
 				}, plugin.getCooldownTime());
 				event.setMessage(msg);
@@ -196,6 +205,12 @@ public class ChatListener implements Listener{
 		} 
 	}*/
 	
+	private void cooldownCheck(Player player) {
+		String pID = player.getUniqueId().toString();
+		if (!player.hasPermission("chatalert.nocooldown")){
+			plugin.onCooldown.add(pID);
+		}
+	}
 	
 	private void ping(final Player player){
 		final Location location = player.getLocation();
