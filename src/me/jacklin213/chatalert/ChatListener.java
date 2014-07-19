@@ -31,11 +31,47 @@ public class ChatListener implements Listener{
 		if (event.getLastToken().startsWith("@")){
 			String prefix = event.getLastToken().substring(1).toLowerCase();
 			
-			for(Player player : Bukkit.getOnlinePlayers()){
+	/*		
+			int arrayLength = Bukkit.getOnlinePlayers().length * 2;
+			String[] bothNames = new String[arrayLength];
+			// plugin.log.info("#====[Essentials Nickname]=====#");
+			// DEBUGGING
+			 
+			int p = 0;
+			for (int i = 0; i < arrayLength/2 ; i++) {
+				bothNames[i] = Bukkit.getOnlinePlayers()[i].getName();
+			}
+			for (int j = 0; j < arrayLength/2; j++) {
+				bothNames[j + arrayLength/2] = this.getEssNickname(Bukkit.getOnlinePlayers()[p]);
+				p++;
+				plugin.log.info(bothNames[j + arrayLength/2]);
+			}
+			
+			//plugin.log.info("#====[All Names]====#");
+			//DEBUGGING
+			 
+			for (String string : bothNames) {
+				// plugin.log.info(string);
+				//DEBUGGING
+				 
+				if (string != null && string.toLowerCase().startsWith(prefix)) {
+					names.add("@" + string);
+				}
+			}
+	*/		
+			
+			for (Player player : Bukkit.getOnlinePlayers()) {
 				if (player.getName().toLowerCase().startsWith(prefix)){
 					names.add("@" + player.getName());
 				} 
+				//Buggy
+				if (this.getEssNickname(player).toLowerCase().startsWith(prefix)) {
+					names.add("@" + this.getEssNickname(player));
+				}
 			}
+			
+			plugin.log.info(names.toString());
+			
 			Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, new Runnable(){
 				public void run(){
 					names.clear();
@@ -56,34 +92,51 @@ public class ChatListener implements Listener{
 			suffix = ChatAlert.chat.getPlayerSuffix(player);
 		}
 		if(player.hasPermission("chatalert.alert")){
-			if (plugin.onCooldown.contains(pID)){
-				player.sendMessage(plugin.chatPluginPrefix + "Tagging is on cooldown");
-				event.setCancelled(true);
-			} else {
-				for (Player p : Bukkit.getOnlinePlayers()){
-					if (msg.contains("@" + p.getName()) || msg.contains("@" + p.getName().toLowerCase()) || msg.contains("@" + p.getName().toUpperCase()) /*|| msg.toLowerCase().contains("@" + p.getName())*/){
-						//ChatAlert v1.4.1
-						this.ping(p);
-						msg = ChatColor.translateAlternateColorCodes('&', msg.replace("@" + p.getName(), plugin.getTagColor() + "@" + p.getName() + suffix));
-						cooldownCheck(player);
-						
-						/* Experiment
-						String replacement = msg.substring(msg.indexOf("@"), (msg.indexOf("@") + 1) + p.getName().length());
-						plugin.log.info(msg.substring(msg.indexOf("@"), (msg.indexOf("@") + 1) + p.getName().length()));
-						this.ping(p);
-						msg = ChatColor.translateAlternateColorCodes('&', msg.replaceAll(replacement, plugin.getTagColor() + "@" + p.getName() + suffix));*/
-					}/* else {
+			for (Player p : Bukkit.getOnlinePlayers()){
+				if (msg.contains("@" + this.getEssNickname(p)) || msg.contains("@" + this.getEssNickname(p).toLowerCase()) /*End of Ess check*/) {
+					if (plugin.onCooldown.contains(pID)){
+						player.sendMessage(plugin.chatPluginPrefix + "Tagging is on cooldown");
 						event.setCancelled(true);
-						player.sendMessage(plugin.chatPluginPrefix + ChatColor.RED + "Player not online or does not exist.");
-					}*/
-				}
-				Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, new Runnable(){
-					public void run(){
-						plugin.onCooldown.remove(pID);
 					}
-				}, plugin.getCooldownTime());
-				event.setMessage(msg);
+					String[] args = msg.split(" ");
+					// for (String string : args) does not work
+					for (int i = 0; i < args.length; i++) {
+						if (args[i].equalsIgnoreCase("@" + this.getEssNickname(p))) {
+							args[i] = ChatColor.translateAlternateColorCodes('&', args[i].replace("@" + this.getEssNickname(p), plugin.getTagColor() + "@" + this.getEssNickname(p) + suffix));
+						}
+					}
+					this.ping(p);
+					//msg = ChatColor.translateAlternateColorCodes('&', msg.replace("@" + this.getEssNickname(p), plugin.getTagColor() + "@" + this.getEssNickname(p) + suffix));
+					msg = this.listToString(args);
+					cooldownCheck(player);
+				}
+				if (msg.contains("@" + p.getName()) || msg.contains("@" + p.getName().toLowerCase()) || msg.contains("@" + p.getName().toUpperCase()) /*|| msg.toLowerCase().contains("@" + p.getName())*/){
+					if (plugin.onCooldown.contains(pID)){
+						player.sendMessage(plugin.chatPluginPrefix + "Tagging is on cooldown");
+						event.setCancelled(true);
+					}
+					//ChatAlert v1.4.1
+					this.ping(p);
+					msg = ChatColor.translateAlternateColorCodes('&', msg.replace("@" + p.getName(), plugin.getTagColor() + "@" + p.getName() + suffix));
+					cooldownCheck(player);
+						
+					/* Experiment
+					String replacement = msg.substring(msg.indexOf("@"), (msg.indexOf("@") + 1) + p.getName().length());
+					plugin.log.info(msg.substring(msg.indexOf("@"), (msg.indexOf("@") + 1) + p.getName().length()));
+					this.ping(p);
+					msg = ChatColor.translateAlternateColorCodes('&', msg.replaceAll(replacement, plugin.getTagColor() + "@" + p.getName() + suffix));*/
+				}/* else {
+					event.setCancelled(true);
+					player.sendMessage(plugin.chatPluginPrefix + ChatColor.RED + "Player not online or does not exist.");
+				}*/
 			}
+			Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, new Runnable(){
+				public void run(){
+					plugin.onCooldown.remove(pID);
+				}
+			}, plugin.getCooldownTime());
+			event.setMessage(msg);
+			
 			
 			/*for (String phrase : args){
 				if (phrase.startsWith("@")){
@@ -204,6 +257,22 @@ public class ChatListener implements Listener{
 			}
 		} 
 	}*/
+	
+	private String listToString(String[] args) {
+		StringBuilder sb = new StringBuilder();
+		for (String string : args) {
+			sb.append(string).append(" ");
+		}
+		return sb.toString();
+	}
+	
+	private String getEssNickname(Player player) {
+		if (plugin.essentials.getUser(player)._getNickname() == null) {
+			return player.getPlayerListName();
+		} else {
+			return plugin.essentials.getUser(player)._getNickname();
+		}
+	}
 	
 	private void cooldownCheck(Player player) {
 		String pID = player.getUniqueId().toString();

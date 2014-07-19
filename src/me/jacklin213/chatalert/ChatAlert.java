@@ -5,6 +5,8 @@ import java.security.acl.Permission;
 import java.util.ArrayList;
 import java.util.logging.Logger;
 
+import com.earth2me.essentials.Essentials;
+
 import me.jacklin213.chatalert.Updater.UpdateResult;
 import me.jacklin213.chatalert.Updater.UpdateType;
 import net.milkbowl.vault.chat.Chat;
@@ -13,6 +15,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -21,6 +24,7 @@ public class ChatAlert extends JavaPlugin{
 	
 	public static Chat chat = null;
 	public static Permission perms = null;
+	public Essentials essentials = null;
 	
 	public Logger log;
 	public ChatListener chatListener = new ChatListener(this);
@@ -40,6 +44,9 @@ public class ChatAlert extends JavaPlugin{
 		Boolean autoUpdate = Boolean.valueOf(getConfig().getBoolean("AutoUpdate"));
 		
 		this.updateCheck(updateCheck, autoUpdate, 61677);
+		
+		//Essentials setup
+		this.essCheck();
 		
 		//Vault setup
 		if (getConfig().getBoolean("Advanced.UseVault")){
@@ -140,40 +147,54 @@ public class ChatAlert extends JavaPlugin{
 		return cooldownTime;
 	}
 	
-	 private boolean setupChat() {
-		 if (getServer().getPluginManager().getPlugin("Vault") == null) {
-			 return false;
-		 }
-		 RegisteredServiceProvider<Chat> rsp = getServer().getServicesManager().getRegistration(Chat.class);
-		 if (rsp == null) {
-			 return false;
-		 }
-		 chat = rsp.getProvider();
-		 return chat != null;
-	 }
+	private boolean setupChat() {		
+		if (getServer().getPluginManager().getPlugin("Vault") == null) {
+			return false	;
+		}
+		RegisteredServiceProvider<Chat> rsp = getServer().getServicesManager().getRegistration(Chat.class);
+		if (rsp == null) {
+			return false;
+		}
+		chat = rsp.getProvider();
+		return chat != null;
+	}
+	 
+	private void essCheck() {
+		if (getConfig().getBoolean("Advanced.UseEssentialsNickTag")) {
+			Plugin essInstance = getServer().getPluginManager().getPlugin("Essentials");
+			if (essInstance != null) {
+				essentials = (Essentials) essInstance;
+				log.info("Successfully hooked into Essentials, Essentials Nickname Tagging enabled");
+			} else {
+				log.severe("Unable to find Essentials, Essentials Nickname Tagging disabled");
+				log.severe("Set UseEssentialsNickTag to false in your config to ignore this message");
+				essentials = null;
+			}
+		}
+	}
 
-	// Every Plugin must have
+	 // Every Plugin must have
 	private void setLogger(){
 		log = getLogger();
-	}
+	}	
 	
 	private void updateCheck(boolean updateCheck, boolean autoUpdate, int ID){
 		if(updateCheck && (autoUpdate == false)){
 			updater = new Updater(this, ID, this.getFile(), UpdateType.NO_DOWNLOAD, true);
 			if (updater.getResult() == UpdateResult.UPDATE_AVAILABLE) {
-			    log.info("New version available! " + updater.getLatestName());
+				log.info("New version available! " + updater.getLatestName());
 			}
 			if (updater.getResult() == UpdateResult.NO_UPDATE){
 				log.info(String.format("You are running the latest version of %s", getDescription().getName()));
-			}
-		}
-		if(autoUpdate && (updateCheck == false)){
+			 	}
+		 	}
+		if (autoUpdate && (updateCheck == false)){
 			updater = new Updater(this, ID, this.getFile(), UpdateType.NO_VERSION_CHECK, true);
-		} 
-		if(autoUpdate && updateCheck){
+		}		 
+		if (autoUpdate && updateCheck){
 			updater = new Updater(this, ID, this.getFile(), UpdateType.DEFAULT, true);
 			if (updater.getResult() == UpdateResult.UPDATE_AVAILABLE) {
-			    log.info("New version available! " + updater.getLatestName());
+				log.info("New version available! " + updater.getLatestName());
 			}
 			if (updater.getResult() == UpdateResult.NO_UPDATE){
 				log.info(String.format("You are running the latest version of %s", getDescription().getName()));

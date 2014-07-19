@@ -19,9 +19,11 @@ UpdateCheck: true
 AutoUpdate: true
 
 #==== Advanced ====#
-# Everything stated bellow will require vault
+# Everything stated bellow will require either vault or essentials
 Advanced:
   # Vault intergration
   UseVault: false
   # Uses Player suffix as message color when being tagged. Will ignore MsgColor
   UseSuffix: false
+  # Essentials Integration with Nickname Tagging
+  UseEssentialsNickTag: false
