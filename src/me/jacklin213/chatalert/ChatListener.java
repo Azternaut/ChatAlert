@@ -267,7 +267,7 @@ public class ChatListener implements Listener{
 	}
 	
 	private String getEssNickname(Player player) {
-		if (plugin.essentials.getUser(player)._getNickname() == null) {
+		if (plugin.essentials == null || plugin.essentials.getUser(player)._getNickname() == null) {
 			return player.getPlayerListName();
 		} else {
 			return plugin.essentials.getUser(player)._getNickname();

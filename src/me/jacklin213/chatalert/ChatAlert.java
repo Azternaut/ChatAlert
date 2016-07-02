@@ -5,8 +5,6 @@ import java.security.acl.Permission;
 import java.util.ArrayList;
 import java.util.logging.Logger;
 
-import com.earth2me.essentials.Essentials;
-
 import me.jacklin213.chatalert.Updater.UpdateResult;
 import me.jacklin213.chatalert.Updater.UpdateType;
 import net.milkbowl.vault.chat.Chat;
@@ -20,7 +18,9 @@ import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 
-public class ChatAlert extends JavaPlugin{
+import com.earth2me.essentials.Essentials;
+
+public class ChatAlert extends JavaPlugin {
 	
 	public static Chat chat = null;
 	public static Permission perms = null;
